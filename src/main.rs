@@ -6,7 +6,7 @@ use std::{env, fs::*};
 const WIDTH: usize = 40;
 const HEIGHT: usize = 40;
 
-const REFRESH_INTERVAL: u64 = 500;
+const REFRESH_INTERVAL: u64 = 100;
 
 const START: [&str; HEIGHT] = ["000000000000000000000000000000",
                                "000000000000000000000000000000",
