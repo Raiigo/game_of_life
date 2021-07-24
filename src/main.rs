@@ -1,7 +1,10 @@
+use std::io::{Write, stdout};
+use std::path::Path;
 use std::time::{Duration, Instant};
+use std::{env, fs::*};
 
-const WIDTH: usize = 30;
-const HEIGHT: usize = 30;
+const WIDTH: usize = 40;
+const HEIGHT: usize = 40;
 
 const REFRESH_INTERVAL: u64 = 500;
 
@@ -34,9 +37,20 @@ const START: [&str; HEIGHT] = ["000000000000000000000000000000",
                                "000000000000000000000000000000",
                                "000000000000000000000000000000",
                                "000000000000000000000000000000",
+                               "000000000000000000000000000000",
+                               "000000000000000000000000000000",
+                               "000000000000000000000000000000",
+                               "000000000000000000000000000000",
+                               "000000000000000000000000000000",
+                               "000000000000000000000000000000",
+                               "000000000000000000000000000000",
+                               "000000000000000000000000000000",
+                               "000000000000000000000000000000",
+                               "000000000000000000000000000000",
                                "000000000000000000000000000000"];
 
 fn main() {
+
     // let mut map: [[bool; WIDTH]; HEIGHT] = [[true; WIDTH]; HEIGHT]; // Represent whether a cell is alive or not
     // let mut map: [[bool; WIDTH]; HEIGHT] = [[false, true, false, false, false, false, false, false, false, false],
     //                                         [false, false, true, false, false, false, false, false, false, false],
@@ -51,21 +65,73 @@ fn main() {
 
     let mut map: [[bool; WIDTH]; HEIGHT] = [[false; WIDTH]; HEIGHT];
 
-    let mut start_config_ok: bool = true;
-    for string in START { // Check if START is well formated
-        if string.len() == WIDTH {
-            continue;
-        } else {
-            println!("Error, one line doesn't have {} chars", WIDTH);
-            start_config_ok = false;
-            break;
+    print!("Enter txt file name (without .txt) to load : ");
+    std::io::stdout().flush().unwrap();
+    let mut filename: String = String::new();
+    std::io::stdin().read_line(&mut filename).expect("Error while reading input");
+    let mut path_to_file = env::current_dir().unwrap().to_str().unwrap().to_owned();
+    path_to_file.push_str(&format!(r#"\{}"#, filename));
+    path_to_file = path_to_file.replace("\n", "");
+    path_to_file.pop();
+    path_to_file.push_str(".txt");
+
+    // let file: File = File::open(path_to_file).map_or_else(|e| {
+    //     panic!();
+    // }, |f| {
+    //     f
+    // });
+    
+    println!("{}", path_to_file);
+    // println!("{}", read_to_string(&path_to_file).unwrap());
+
+    let file_content = read_to_string(path_to_file).unwrap();
+
+    let file_line: Vec<&str> = file_content.split("\n").collect();
+    let file_map: Vec<Vec<char>> = file_line.into_iter().map(|line| {
+        let char_array: Vec<char> = line.chars().filter_map(|e| {
+            if e != '0' && e != '1' {
+                None
+            } else {
+                Some(e)
+            }
+        }).collect();
+        char_array
+    }).collect();
+
+    for line in &file_map {
+        for c in line {
+            print!("{}", c);
+        }
+        print!("\n");
+        stdout().flush().unwrap();
+    }
+
+    let mut file_ok: bool = true;
+    if file_map.len() != HEIGHT {
+        file_ok = false;
+        println!("Error, file must contain {} lines", HEIGHT);
+        panic!();
+    }
+    for line in &file_map {
+        println!("{}", line.len());
+        if line.len() != WIDTH {
+            file_ok = false;
+            println!("Error, each file line must contain {} chars", WIDTH);
+            panic!();
         }
     }
 
-    if start_config_ok { // Resolving map from START
-        for i in 0..HEIGHT - 1 {
-            for j in 0..WIDTH - 1 {
-                if START[i].chars().nth(j) == Some('0') {
+    // let file_copy = file_line.clone();
+
+    // let chars: Vec<Vec<char>> = file_copy.into_iter().map(|line| {
+    //     let char_line: Vec<char> = line.chars().collect();
+    //     char_line
+    // }).collect();
+
+    if file_ok {
+        for i in 0..HEIGHT {
+            for j in 0..WIDTH {
+                if file_map[i][j] == '0' {
                     map[i][j] = false;
                 } else {
                     map[i][j] = true;
@@ -73,6 +139,29 @@ fn main() {
             }
         }
     }
+
+    // let mut start_config_ok: bool = true;
+    // for string in START { // Check if START is well formated
+    //     if string.len() == WIDTH {
+    //         continue;
+    //     } else {
+    //         println!("Error, one line doesn't have {} chars", WIDTH);
+    //         start_config_ok = false;
+    //         break;
+    //     }
+    // }
+
+    // if start_config_ok { // Resolving map from START
+    //     for i in 0..HEIGHT - 1 {
+    //         for j in 0..WIDTH - 1 {
+    //             if START[i].chars().nth(j) == Some('0') {
+    //                 map[i][j] = false;
+    //             } else {
+    //                 map[i][j] = true;
+    //             }
+    //         }
+    //     }
+    // }
     
 
     let separator: String = ['-'; WIDTH * 2].iter().map(|e| {
@@ -83,7 +172,7 @@ fn main() {
 
     loop {
 
-        if instant.elapsed() == Duration::from_millis(REFRESH_INTERVAL) {
+        if instant.elapsed() >= Duration::from_millis(REFRESH_INTERVAL) {
             instant = Instant::now();
 
             println!("{}", separator);
